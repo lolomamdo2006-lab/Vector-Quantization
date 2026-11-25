@@ -2,6 +2,7 @@ import math
 vectors = []
 def create_vectors(vector_x,vector_y,matrix):
     height, width =  len(matrix), len(matrix[0])   
+    height, width =  len(matrix), len(matrix[0])   
     for i in range(0, height, vector_x):
         for j in range(0, width,vector_y):
             vector = []
