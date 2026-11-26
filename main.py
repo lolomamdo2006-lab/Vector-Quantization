@@ -1,18 +1,19 @@
 from PIL import Image
 import numpy as np
+from compress import *
 def choice1():
     image_path = input("Enter image path: ")
-    # x_of_vector=input("Enter the size (x) of the blocks: ")
-    # y_of_vector=input("Enter the size (y) of the blocks: ")
-    # num_of_vectors=input("Enter the number of blocks (vectors) in the codebook ")
+    x_of_vector = int(input("Enter the size (x) of the blocks: "))
+    y_of_vector = int(input("Enter the size (y) of the blocks: "))
+    num_of_vectors = int(input("Enter the number of vectors in the codebook: "))
 
     img = Image.open(image_path)
     img = img.convert("L")
     matrix = np.array(img)
+    # m = create_vectors(x_of_vector, y_of_vector, matrix)
+    # result = compress(m, num_of_vectors)
+    # print (result)
     
-    #for test
-    print(img.size)
-    print(matrix)
 
 
 
