@@ -10,9 +10,10 @@ def choice1():
     img = Image.open(image_path)
     img = img.convert("L")
     matrix = np.array(img)
-    # m = create_vectors(x_of_vector, y_of_vector, matrix)
-    # result = compress(m, num_of_vectors)
-    # print (result)
+    matrix = matrix.astype(int)
+    m = create_vectors(x_of_vector, y_of_vector, matrix)
+    result = compress(m, num_of_vectors)
+    print (result)
     
 
 

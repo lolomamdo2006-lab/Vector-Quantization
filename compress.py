@@ -51,11 +51,11 @@ def assign_and_update(vectors, codebook,codebook_size):
     for vector in vectors:
         minimum = float('inf')
         i=0
-        for c in codebook:
-            distance=calc_distance(vector,c)
-            if(minimum>distance):
-                minimum=distance
-                i = codebook.index(c)
+    for idx, c in enumerate(codebook):
+        distance = calc_distance(vector, c)
+        if distance < minimum:
+            minimum = distance
+            i = idx
             
         data[i].append(vector)
 
