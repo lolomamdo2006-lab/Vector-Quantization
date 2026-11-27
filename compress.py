@@ -1,6 +1,7 @@
 import math
-vectors = []
+
 def create_vectors(vector_x,vector_y,matrix):
+    vectors = []
     height, width =  len(matrix), len(matrix[0])   
     height, width =  len(matrix), len(matrix[0])   
     for i in range(0, height, vector_x):
@@ -8,7 +9,7 @@ def create_vectors(vector_x,vector_y,matrix):
             vector = []
             for x in range(vector_x):
                 for y in range(vector_y):
-                    vector.append(matrix[i+x][j+y])
+                    vector.append(int(matrix[i+x][j+y]))
             vectors.append(vector)
     return vectors
 def calc_avg(vector_x,vector_y,vectors):
@@ -26,8 +27,9 @@ def calc_avg(vector_x,vector_y,vectors):
                 avg[i][j]+=vector[i * cols + j]
     for i in range(rows):
         for j in range(cols):
-            avg[i][j]= round(avg[i][j]/len(vectors),1)
+            avg[i][j]= avg[i][j]/len(vectors)
     return avg
+
 def distance(vector_x,vector_y,vectors,split_left,split_right):
     rows=vector_x
     cols=vector_y
@@ -66,11 +68,26 @@ def split(vectors, vector_x, vector_y):
         left_rows = []
         right_rows = []
         for j in range(vector_y):
-            left_rows.append(math.floor(avg[i][j]+1))
-            right_rows.append(math.ceil(avg[i][j]-1))
+            left_avg = math.floor(avg[i][j])
+            right_avg = math.ceil(avg[i][j])
+            if (left_avg == right_avg):
+                left_avg -= 1
+                right_avg += 1
+            left_rows.append(left_avg)
+            right_rows.append(right_avg)
         left_vectors.append(left_rows)
         right_vectors.append(right_rows)
     left_list, right_list = distance(vector_x, vector_y, vectors, left_vectors, right_vectors)
+    while(True):
+        old_left_list = left_list.copy()
+        old_right_list = right_list.copy()
+        if len(left_list) == 0 or len(right_list) == 0:
+            break
+        left_avg = calc_avg(vector_x, vector_y, left_list)
+        right_avg = calc_avg(vector_x, vector_y, right_list)
+        left_list, right_list = distance(vector_x, vector_y, left_list+right_list, left_avg, right_avg)
+        if old_left_list == left_list and old_right_list == right_list:
+            break
     if len(left_list) > 0 :
         node.left = Node(calc_avg(vector_x, vector_y, left_list), left_list)
     if len(right_list) > 0 :
@@ -83,16 +100,32 @@ def count_leaves(node):
     if node.left is None and node.right is None:
         return 1
     return count_leaves(node.left) + count_leaves(node.right)
-def split_all_leaves(node, root,vector_x, vector_y, codewords):
+
+
+def split_all_leaves(node, root, vector_x, vector_y, codewords):
+
     if count_leaves(root) >= codewords:
         return node
+ 
     if node.left is None and node.right is None:
+
+        
+        if len(node.vectors) <= 1:
+            return node
+
         new_node = split(node.vectors, vector_x, vector_y)
+
+        if new_node.left is None or new_node.right is None:
+            return node
+
         node.left = new_node.left
         node.right = new_node.right
-    else:
+
+        
         split_all_leaves(node.left, root, vector_x, vector_y, codewords)
+
         split_all_leaves(node.right, root, vector_x, vector_y, codewords)
+
     return node
 def get_codewords(node, codewords):
     if node is None:
@@ -103,69 +136,45 @@ def get_codewords(node, codewords):
         get_codewords(node.left, codewords)
         get_codewords(node.right, codewords)
     return codewords
+
 def compress(matrix, vector_x, vector_y, codewords):
     vectors= create_vectors(vector_x, vector_y, matrix)
     avg = calc_avg(vector_x, vector_y, vectors)
     root=Node(avg, vectors)
     split_all_leaves(root, root, vector_x, vector_y, codewords)
+    
     codewords_list=[]
     get_codewords(root, codewords_list)
-    num_bits=(len(codewords_list)-1).bit_length()
-    code_binary=[]
+    num_bits=max(1, (len(codewords_list)-1).bit_length())
+    code_binary={}
     for i in range(len(codewords_list)):
-        code_binary.append(format(i, '0' + str(num_bits) + 'b'))
+        binary=(format(i, '0' + str(num_bits) + 'b'))
+        code_binary[binary]=codewords_list[i]
+
     compressed_data=""
     for vector in vectors:
         min_distance=float('inf')
         closest_codeword=None
-        for codeword in codewords_list:
+        for binary, codeword in code_binary.items():
             distance=0
             for i in range(vector_x):
                 for j in range(vector_y):
                     distance+=pow((vector[i * vector_y + j]-codeword[i][j]),2)
             if distance<min_distance:
                 min_distance=distance
-                closest_codeword=codeword
-                code_index=codewords_list.index(closest_codeword)
-        compressed_data+=code_binary[code_index]
+                closest_binary=binary
+                
+        compressed_data+=closest_binary
 
-    return compressed_data
+    return compressed_data,code_binary,((vector_x * vector_y * 8) / num_bits)
 
+   
 
     
     
     
-matrix=[
-    [1,2,7,9,4,11],
-    [3,4,6,6,12,12],
-    [4,9,15,14,9,9],
-    [10,10,20,18,8,8],
-    [4,3,17,16,1,4],
-    [4,5,18,18,5,6]
-]
-m=create_vectors(2,2,matrix)
-for i in m: print (i)
-print(calc_avg(2,2,m))
-#avg
-#asso
-#split
 
 
 
 
-
-              
-def split(vector_x,vector_y,matrix):
-    avg=[]
-    for vector in vectors:  
-      sum=0
-      for i in vector_x:
-        for j in vector_y:
-            sum+=matrix[i][j]
-    avg.append(sum/len(vector))
-
-
-
-#avg
-#asso
-#split
+            
