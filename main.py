@@ -31,7 +31,7 @@ def main():
             choice1();
 
         elif choice == "2":
-            pass
+            decompress()
 
         elif choice == "3":
             print("Goodbye!")

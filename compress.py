@@ -1,9 +1,13 @@
-
+import ast
 import math
-
+import numpy as np
+from PIL import Image
 def create_vectors(vector_x,vector_y,matrix):
+
     vectors = []
-    height, width =  len(matrix), len(matrix[0])   
+    height, width =  len(matrix), len(matrix[0]) 
+    with open("size_of_image.txt", "w") as f:
+        f.write(f"{height}\n{width}\n{vector_x}\n{vector_y}\n" ) 
     for i in range(0, height, vector_x):
         for j in range(0, width,vector_y):
             vector = []
@@ -46,27 +50,25 @@ def calc_distance(v1, v2):
             diff = -diff
         total = total + diff
     return total
-def assign_and_update(vectors, codebook,codebook_size):
+def assign_and_update(vectors, codebook, codebook_size):
     data = [[] for _ in range(len(codebook))]
     for vector in vectors:
         minimum = float('inf')
-        i=0
-    for idx, c in enumerate(codebook):
-        distance = calc_distance(vector, c)
-        if distance < minimum:
-            minimum = distance
-            i = idx
-            
+        i = 0
+        for idx, c in enumerate(codebook):
+            distance = calc_distance(vector, c)
+            if distance < minimum:
+                minimum = distance
+                i = idx
         data[i].append(vector)
 
     new_codebook = []
-  
-    for  sub_data in data:
-        new_codebook.append(calc_avg(sub_data))
-        
+    for k, sub_data in enumerate(data):
+        if sub_data:
+         new_codebook.append(calc_avg(sub_data))
+        else:
+         new_codebook.append(codebook[k])
     return new_codebook
-
-
 def compress(vectors, codebook_size):
     codebook = [calc_avg(vectors)]
     while len(codebook) < codebook_size:
@@ -100,6 +102,7 @@ def encode(vectors, codebook, codebook_size):
     bits=""
     for vector in vectors:
      bits+=(dic[tuple(vector)])
+    original_length = len(bits)
     bits += '0' * ((8 - len(bits) % 8) % 8)
     byte_data = bytearray()
     for i in range (0,len(bits),8):
@@ -108,10 +111,52 @@ def encode(vectors, codebook, codebook_size):
         byte_data.append(num)
     with open("compressed.bin", "wb") as file:
         file.write(byte_data)
+    with open("padding.txt", "w") as file:
+        file.write(str(original_length))
+    clean_codebook = [[float(v) for v in codeword] for codeword in codebook]
+    with open("codebook.txt", "w") as f:
+        f.write(str(clean_codebook))
     return bits
       
         
+def decompress():
+    with open("compressed.bin", "rb") as f:
+        data = f.read()
+    bits=""
+    for byte in data:
+        bits += format(byte, '08b')
+    with open("padding.txt", "r") as f:
+        original_length = int(f.read())
+    bits= bits[:original_length]
 
+    with open("codebook.txt", "r") as f:
+        codebook = ast.literal_eval(f.read())
+    codebook_size=len(codebook)
+    n=math.ceil(math.log2(codebook_size)) 
+    vectors=[]
+    for i in range(0,len(bits),n):
+        index = int(bits[i:i+n], 2)         
+        vectors.append(codebook[index])   
+    with open("size_of_image.txt", "r") as f:
+        height = int(f.readline())
+        width = int(f.readline())
+        vector_x = int(f.readline())
+        vector_y = int(f.readline())
+    decode(vectors,height,width,vector_x,vector_y)
+def decode(vectors,height,width,vector_x,vector_y):
+    img = np.zeros((height, width), dtype=np.uint8)
+    k=0
+    for i in range(0, height, vector_x):
+        for j in range(0, width,vector_y):
+            vector = vectors[k]
+            k+=1
+            p=0
+            for x in range(vector_x):
+                for y in range(vector_y):
+                    if i+x < height and j+y < width:
+                        img[i+x][j+y]=round(vector[p])
+                    p+=1
+    Image.fromarray(img).save("decompressed.png")
 matrix=[
     [1,2,7,9,4,11],
     [3,4,6,6,12,12],
