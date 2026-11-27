@@ -163,10 +163,46 @@ def compress(matrix, vector_x, vector_y, codewords):
             if distance<min_distance:
                 min_distance=distance
                 closest_binary=binary
+        
                 
         compressed_data+=closest_binary
+    height = len(matrix)
+    width = len(matrix[0])
 
-    return compressed_data,code_binary,((vector_x * vector_y * 8) / num_bits)
+    compression_ratio = compress_ratio(
+    height,
+    width,
+    vector_x,
+    vector_y,
+    codewords_list,
+    vectors
+)
+
+    return compressed_data, code_binary, compression_ratio
+
+    
+
+
+def compress_ratio(height, width, vector_x, vector_y, codewords_list, vectors):
+
+    original_size = height * width * 8
+
+    number_of_vectors = len(vectors)
+
+    actual_codewords = len(codewords_list)
+
+    num_bits = max(1, (actual_codewords - 1).bit_length())
+
+    labels_size = number_of_vectors * num_bits
+
+    codebook_size = actual_codewords * vector_x * vector_y * 8
+
+    compressed_size = labels_size + codebook_size
+
+    compression_ratio = original_size / compressed_size
+
+    return compression_ratio
+
 
    
 
